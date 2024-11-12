@@ -1,0 +1,216 @@
+<html>
+<head>
+<meta charset=utf-8 />
+<title>NC County Population</title>
+<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<style>
+  body {
+margin:0;
+padding:0;
+font-family:
+sans-serif;
+}
+h1 {
+position: absolute;
+left: 50px;
+top: 10px;
+padding: 8px 2%;
+margin: 0;
+background: #ff0000;
+box-shadow: 0 0 15px rgba(0,0,0,0.2);
+border-radius: 3px;
+color: whitesmoke;
+font-size: 1.5em;
+z-index: 800;
+}
+#map {
+position:absolute;
+top:0;
+bottom:0;
+width:100%;
+height: 100%;
+}
+.info {
+z-index: 1000;
+position: absolute;
+right: 20px;
+top: 20px;
+padding: 6px 8px;
+font: 14px Arial, Helvetica, sans-serif;
+text-align: right;
+background: white;
+background: rgba(255, 255, 255, 0.8);
+box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+border-radius: 5px;
+}
+.info h4 {
+font-size: 16px;
+margin: 0 0 5px;
+color: #777777;
+}
+.legend {
+                position: relative;
+                bottom: 50px;
+                left: 1050px;
+                background-color: rgb(255, 255, 255);
+                padding: 30px;
+                border-radius: 5px;
+                z-index: 1000;
+                box-shadow: 0 0 5px #ff0000;
+
+            }
+            .legend .circle {
+                display: block;
+                margin-bottom: 5px;
+                margin-top: 10px;
+                border-radius: 50%;
+                background: #ff0000;
+                margin-right: 5px;
+                align-items: center;
+            }
+            .legend .label {
+                font-size: 15px;
+                font: sans-serif;
+                color: #ff0000;
+                line-height: 20px;
+            }
+            .legend .min-label {
+                color: #ff0000;
+            }
+            .legend .mid-label {
+                color: #ff0000;
+            }
+            .legend .max-label {
+                color: #ff0000;
+            }
+            section {
+			position: absolute;
+			bottom: 10px;
+			left: 10px;
+			width: 280px;
+			margin: 20px auto;
+			padding: 0 15px;
+            background:  rgb(245, 245, 245, 0.8);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+			z-index: 800;
+		}
+
+        #infoBox {
+            cursor: pointer;
+        }
+
+		p {
+			font-size: .9em;
+			line-height: 1.5em;
+		}
+
+		a {
+			color: #005daa;
+			text-decoration: none;
+		}
+
+		a:hover {
+			text-decoration: underline;
+		}
+
+</style>
+</head>
+<body>
+<div id='map'></div>
+
+<h1>North Carolina County Populations, 2023</h1>
+<!--section "about the map" gives informations about the map-->
+<section>
+  <div id="infoBox">
+      <h4 onclick="toggleInfoBox()">About the Map <span id="toggleButton">[-]</span></h4>
+      <div id="infoContent">
+          <p>This interactive map provides a visual representation of the populations for each county in North Carolina represented by circles that are representational of population size. The county with the highest population is Wake County at 1194900. The county with the lowest population is Tyrrell County at 3480." November 12, 2024.</p>
+      </div>
+  </div>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+<script>
+
+console.log("hello world!");
+var map = L.map('map', {
+center: [35.4753, -79.459],
+zoom: 6.5
+});
+var Stadia_StamenTonerLite = L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.{ext}', {
+	minZoom: 0,
+	maxZoom: 20,
+	attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://www.stamen.com/" target="_blank">Stamen Design</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	ext: 'png'
+}).addTo(map);
+
+counties = L.geoJson.ajax("assets/map.geojson", {
+  attribution: 'Data: NC Census Bureau, Map: Lily Cornwell',
+  pointToLayer: function (feature, latlng){
+    return L.circleMarker(latlng, {
+      color: '#ff0000',
+      opacity: 1,
+      weight: 2,
+      fillColor: '#ff0000',
+      fillOpacity: .6,
+      radius: calcRadius(feature.properties.estimate)
+    }).on({
+      mouseover: function(e){
+        this.setStyle({color: 'blue',fillColor: 'blue'});
+                  },
+      mouseout: function(e){
+        this.setStyle({color: '#ff0000',fillColor: '#ff0000'});
+      } })},});
+
+    var minValue = 3480;
+    var maxValue = 1194900;
+    var midValue = 108462;
+    var minRadius = 1;
+
+    function calcRadius(val) {
+      return 1.00 * Math.pow(val/minValue,.5) * minRadius;
+    }
+
+
+counties.addTo(map);
+
+var info = L.control();
+info.onAdd = function (map) {
+  this._div = L.DomUtil.create('div', 'info');
+  this.update();
+  return this._div;
+};
+
+info.update = function (content) {
+  this._div.innerHTML = content || '<h4>Hover over a county</h4>';
+};
+
+info.addTo(map);
+
+// Legend control
+var legend = L.control({ position: 'bottomleft' });
+
+legend.onAdd = function (map) {
+    var div = L.DomUtil.create('div', 'legend');
+    div.innerHTML += '<b>Population Size (Min/Max)</b><br>';
+
+    // Define range of values for the legend
+    var sizes = [minValue, midValue, maxValue];
+    var radiusMin = calcRadius(sizes[0]);
+    var radiusMid = calcRadius(sizes[1]);
+    var radiusMax = calcRadius(sizes[2]);
+
+    // Add legend circles for Min, Mid, and Max
+    div.innerHTML += '<span class="circle" style="width: ' + radiusMin + 'px; height: ' + radiusMin + 'px;"></span><span class="label min-label">' + sizes[0] + '</span><br>';
+    div.innerHTML += '<span class="circle" style="width: ' + radiusMid + 'px; height: ' + radiusMid + 'px;"></span><span class="label mid-label">' + sizes[1] + '</span><br>';
+    div.innerHTML += '<span class="circle" style="width: ' + radiusMax + 'px; height: ' + radiusMax + 'px;"></span><span class="label max-label">' + sizes[2] + '</span>';
+
+    return div;
+};
+
+legend.addTo(map);
+
+</script>
+</body>
+</html>
