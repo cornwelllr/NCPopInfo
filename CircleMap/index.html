@@ -125,7 +125,7 @@ color: #777777;
   <div id="infoBox">
       <h4 onclick="toggleInfoBox()">About the Map <span id="toggleButton">[-]</span></h4>
       <div id="infoContent">
-          <p>This interactive map provides a visual representation of the populations for each county in North Carolina represented by circles that are representational of population size. The county with the highest population is Wake County at 1194900. The county with the lowest population is Tyrrell County at 3480." November 12, 2024.</p>
+          <p>This interactive map provides a visual representation of the populations for each county in North Carolina represented by circles that are representational of population size. The county with the highest population is Wake County at 1194900. The county with the lowest population is Tyrrell County at 3480. November 12, 2024.</p>
       </div>
   </div>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
@@ -138,12 +138,11 @@ var map = L.map('map', {
 center: [35.4753, -79.459],
 zoom: 6.5
 });
-var Stadia_AlidadeSmooth = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}', {
-	minZoom: 0,
-	maxZoom: 20,
-	attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-	ext: 'png'
-}).addTo(map);
+var Esri_WorldGrayCanvas = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+	attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+	maxZoom: 16
+})
+.addTo(map);
 
 counties = L.geoJson.ajax("assets/map.geojson", {
   attribution: 'Data: NC Census Bureau, Map: Lily Cornwell',
@@ -175,18 +174,7 @@ counties = L.geoJson.ajax("assets/map.geojson", {
 
 counties.addTo(map);
 
-var info = L.control();
-info.onAdd = function (map) {
-  this._div = L.DomUtil.create('div', 'info');
-  this.update();
-  return this._div;
-};
 
-info.update = function (content) {
-  this._div.innerHTML = content || '<h4>Hover over a county</h4>';
-};
-
-info.addTo(map);
 
 // Legend control
 var legend = L.control({ position: 'bottomleft' });
